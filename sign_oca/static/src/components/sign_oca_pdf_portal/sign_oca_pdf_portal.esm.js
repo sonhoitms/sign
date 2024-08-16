@@ -1,25 +1,52 @@
 /** @odoo-module **/
 
-const {App, mount, useRef} = owl;
+const { App, mount, useRef } = owl;
 import SignOcaPdf from "../sign_oca_pdf/sign_oca_pdf.esm.js";
-import {makeEnv} from "@web/env";
-import {renderToString} from "@web/core/utils/render";
-import {session} from "@web/session";
+import {makeEnv, startServices} from "@web/env";
 import {templates} from "@web/core/assets";
+import { _t } from "@web/core/l10n/translation";
+import {useService} from "@web/core/utils/hooks";
+import { Registry } from "@web/core/registry";
+import { patch } from "@web/core/utils/patch";
+
+export class DuplicatedKeyError extends Error { }
+
+patch(Registry.prototype, {
+    add(key, value, { force, sequence } = {}) {
+        if (!force && key in this.content) {
+            console.error(`Cannot add '${key}' in this registry: it already exists`) 
+                // Log the error for inspection
+                // Optionally, handle the error in a different way or simply proceed
+            return this;
+        }
+        let previousSequence;
+        if (force) {
+            const elem = this.content[key];
+            previousSequence = elem && elem[0];
+        }
+        sequence = sequence === undefined ? previousSequence || 50 : sequence;
+        this.content[key] = [sequence, value];
+        const payload = { operation: "add", key, value };
+        this.trigger("UPDATE", payload);
+        return this;
+    }
+});
+
+export const registry = new Registry();
+
 
 export class SignOcaPdfPortal extends SignOcaPdf {
     setup() {
         super.setup(...arguments);
         this.signOcaFooter = useRef("sign_oca_footer");
+        this.rpc = useService("rpc");
     }
     async willStart() {
-        this.info = await this.env.services.rpc({
-            route:
-                "/sign_oca/info/" +
+        this.info = await this.rpc("/sign_oca/info/" +
                 this.props.signer_id +
                 "/" +
                 this.props.access_token,
-        });
+        );
     }
 
     getPdfUrl() {
@@ -40,15 +67,10 @@ export class SignOcaPdfPortal extends SignOcaPdf {
         this.checkFilledAll();
     }
     _onClickSign() {
-        this.env.services
-            .rpc({
-                route:
-                    "/sign_oca/sign/" +
-                    this.props.signer_id +
-                    "/" +
-                    this.props.access_token,
-                params: {items: this.info.items},
-            })
+        this.rpc("/sign_oca/sign/" + this.props.signer_id +
+                    "/" + this.props.access_token,
+                {items: this.info.items},
+            )
             .then((action) => {
                 // As we are on frontend env, it is not possible to use do_action(), so we
                 // redirect to the corresponding URL or reload the page if the action is not
@@ -66,19 +88,14 @@ SignOcaPdfPortal.props = {
     access_token: {type: String},
     signer_id: {type: Number},
 };
-export function initDocumentToSign(properties) {
-    return session.session_bind(session.origin).then(function () {
-        return Promise.all([
-            session.load_translations(["web", "portal", "sign_oca"]),
-        ]).then(async function () {
-            var app = new App(null, {templates, test: true});
-            renderToString.app = app;
-            const env = makeEnv();
-            mount(SignOcaPdfPortal, document.body, {
-                env,
-                props: properties,
-                templates: templates,
-            });
-        });
-    });
+export async function initDocumentToSign(properties) {
+    const env = await makeEnv();
+    await startServices(env);
+    var app = new App(SignOcaPdfPortal, {
+        templates, 
+        env:env, 
+        test: true,
+        props: properties});
+
+    return app.mount(document.body);
 }

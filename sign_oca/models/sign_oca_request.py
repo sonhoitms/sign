@@ -52,6 +52,7 @@ class SignOcaRequest(models.Model):
     signer_id = fields.Many2one(
         comodel_name="sign.oca.request.signer",
         compute="_compute_signer_id",
+        store=True,
         help="The signer related to the active user.",
     )
     state = fields.Selection(
@@ -68,7 +69,7 @@ class SignOcaRequest(models.Model):
     )
     signed_count = fields.Integer(compute="_compute_signed_count")
     signer_count = fields.Integer(compute="_compute_signer_count")
-    to_sign = fields.Boolean(compute="_compute_to_sign")
+    to_sign = fields.Boolean(compute="_compute_to_sign", store=True)
     signatory_data = fields.Serialized(
         default=lambda r: {},
         copy=False,
@@ -410,7 +411,7 @@ class SignOcaRequestSigner(models.Model):
         signatory_data = self.request_id.signatory_data
 
         input_data = BytesIO(b64decode(self.request_id.data))
-        reader = PdfFileReader(input_data)
+        reader = PdfFileReader(input_data, strict=False)
         output = PdfFileWriter()
         pages = {}
         for page_number in range(1, reader.numPages + 1):

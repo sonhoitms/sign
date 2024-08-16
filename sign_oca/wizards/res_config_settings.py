@@ -8,5 +8,7 @@ class ResConfigSettings(models.TransientModel):
     _inherit = "res.config.settings"
 
     sign_oca_send_sign_request_copy = fields.Boolean(
-        related="company_id.sign_oca_send_sign_request_copy", readonly=False
+        related="company_id.sign_oca_send_sign_request_copy",
+        config_parameter='sign_oca.sign_oca_send_sign_request_copy',
+        readonly=False
     )

@@ -7,6 +7,7 @@ import requests
 
 from odoo.modules.module import get_module_resource
 from odoo.tests.common import Form, TransactionCase
+from odoo.tools.misc import file_path
 
 
 class TestSign(TransactionCase):
@@ -16,7 +17,7 @@ class TestSign(TransactionCase):
         super().setUpClass()
         cls.data = base64.b64encode(
             open(
-                get_module_resource("sign_oca", "tests", "empty.pdf"),
+                file_path("sign_oca/tests/empty.pdf"),
                 "rb",
             ).read()
         )

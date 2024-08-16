@@ -4,10 +4,11 @@ import SignOcaPdfCommon from "../sign_oca_pdf_common/sign_oca_pdf_common.esm.js"
 import {registry} from "@web/core/registry";
 const SignRegistry = registry.category("sign_oca");
 import {renderToString} from "@web/core/utils/render";
+import { ORM } from "@web/core/orm_service";
 
 export default class SignOcaPdf extends SignOcaPdfCommon {
     setup() {
-        super.setup(...arguments);
+        super.setup();
         this.to_sign = false;
     }
     async willStart() {
@@ -83,14 +84,15 @@ export default class SignOcaPdf extends SignOcaPdfCommon {
         }
     }
     checkFilledAll() {
-        this.to_sign_update =
-            _.filter(this.info.items, (item) => {
-                return (
-                    item.required &&
-                    item.role_id === this.info.role_id &&
-                    !SignRegistry.get(item.field_type).check(item)
-                );
-            }).length === 0;
+        let items;
+        items = Object.values(this.info.items);
+        this.to_sign_update = items.filter((item) => {
+            return (
+                item.required &&
+                item.role_id === this.info.role_id &&
+                !SignRegistry.get(item.field_type).check(item)
+            );
+        }).length === 0;
         this.checkToSign();
     }
 }

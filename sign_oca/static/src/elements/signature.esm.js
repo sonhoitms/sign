@@ -9,9 +9,9 @@ const signatureSignOca = {
         item.value = data.signatureImage[1];
         parent.postIframeField(item);
         parent.checkFilledAll();
-        var next_items = _.filter(
-            parent.info.items,
-            (i) => i.tabindex > item.tabindex
+        let items; 
+        items = Object.values(parent.info.items);
+        var next_items = items.filter((i) => i.tabindex > item.tabindex
         ).sort((a, b) => a.tabindex - b.tabindex);
         if (next_items.length > 0) {
             parent.items[next_items[0].id].dispatchEvent(new Event("focus_signature"));

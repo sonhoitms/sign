@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates>
+    <t t-name="sign_oca.SignOcaDialog">
+        <t t-set="edit_field">Edit Field</t>
+        <Dialog size="'md'" title="edit_field">
+            <div class="o_sign_oca_field_edition">
+                <label for="field_id">Field</label>
+                <div class="o_sign_oca_field_edition_value">
+                    <select name="field_id">
+                        <t t-foreach="info.fields" t-as="field" t-key="field_index">
+                            <option
+                                t-att-value="field.id"
+                                t-out="field.name"
+                                t-att-selected="item.field_id === field.id ? 'selected': None"
+                            />
+                        </t>
+                    </select>
+                </div>
+                <label for="role_id">Filled by</label>
+                <div class="o_sign_oca_field_edition_value">
+                    <select name="role_id">
+                        <t t-foreach="info.roles" t-as="role" t-key="role_index">
+                            <option
+                                t-att-value="role.id"
+                                t-out="role.name"
+                                t-att-selected="item.role_id === role.id ? 'selected': None"
+                            />
+                        </t>
+                    </select>
+                </div>
+                <label for="required">Required</label>
+                <div class="o_sign_oca_field_edition_value">
+                    <input
+                        name="required"
+                        type="checkbox"
+                        t-att-checked="item.required? 'checked': undefined"
+                    />
+                </div>
+                <label for="placeholder">Placeholder</label>
+                <div class="o_sign_oca_field_edition_value">
+                    <input
+                        type="text"
+                        name="placeholder"
+                        t-att-value="item.placeholder || ''"
+                    />
+                </div>
+            </div>
+            <t t-set-slot="footer">
+                <button class="btn btn-primary" t-on-click="() => this.save()">
+                    Save
+                </button>
+                <button class="btn btn-danger" t-on-click="() => this.delete()">
+                    Delete
+                </button>
+                <button class="btn btn-secondary" t-on-click="() => this.cancel()">
+                    Close
+                </button>
+            </t>
+        </Dialog>
+    </t>
+</templates>

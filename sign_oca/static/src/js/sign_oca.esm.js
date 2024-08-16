@@ -7,17 +7,15 @@ import {patch} from "@web/core/utils/patch";
 const {onWillStart} = owl;
 import {useService} from "@web/core/utils/hooks";
 
-export const patchControllerSignOca = {
+export class patchControllerSignOca extends ListController {
     setup() {
-        this._super(...arguments);
-        this.userService = useService("user");
+        super.setup();
         this.orm = useService("orm");
-        this.action = useService("action");
         this.showSignOcaTemplateGenerateMulti = false;
         onWillStart(async () => {
             return Promise.all([this._showSignOcaTemplateGenerateMulti()]);
         });
-    },
+    }
 
     async _showSignOcaTemplateGenerateMulti() {
         var sign_oca_group_user = await this.userService.hasGroup(
@@ -32,13 +30,13 @@ export const patchControllerSignOca = {
                     this.showSignOcaTemplateGenerateMulti = templateCount !== 0;
                 });
         }
-    },
+    }
 
     async _actionSignOcaTemplateGenerateMulti() {
         var resIds = "";
         if (this.getSelectedResIds) resIds = await this.getSelectedResIds();
         else resIds = this.model.root.data.id;
-        this.action.doAction("sign_oca.sign_oca_template_generate_multi_act_window", {
+        this.actionService.doAction("sign_oca.sign_oca_template_generate_multi_act_window", {
             additionalContext: {
                 model: this.props.resModel,
                 active_ids: resIds,
@@ -47,9 +45,9 @@ export const patchControllerSignOca = {
                 this.update({}, {reload: false});
             },
         });
-    },
+    }
 
-    getActionMenuItems() {
+    getStaticActionMenuItems() {
         const menuItems = this._super.apply(this, arguments);
         const otherActionItems = menuItems.other;
         if (menuItems && this.showSignOcaTemplateGenerateMulti) {
@@ -62,7 +60,7 @@ export const patchControllerSignOca = {
         return Object.assign({}, this.props.info.actionMenus, {
             other: otherActionItems,
         });
-    },
+    }
 };
 
 patch(ListController.prototype, patchControllerSignOca);

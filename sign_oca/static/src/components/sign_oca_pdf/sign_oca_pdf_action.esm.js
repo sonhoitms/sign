@@ -8,18 +8,18 @@ import {registry} from "@web/core/registry";
 export class SignOcaPdfAction extends Component {
     init(parent, action) {
         this._super.apply(this, arguments);
-        this.model =
-            (action.params.res_model !== undefined && action.params.res_model) ||
+        this.props.model =
+            (action.params.res_model != undefined && action.params.res_model) ||
             action.context.params.res_model;
-        this.res_id =
-            (action.params.res_id !== undefined && action.params.res_id) ||
+        this.props.res_id =
+            (action.params.res_id != undefined && action.params.res_id) ||
             action.context.params.id;
     }
     async start() {
         await this._super(...arguments);
         this.component = new FormRenderer(this, SignOcaPdf, {
-            model: this.model,
-            res_id: this.res_id,
+            model: this.props.model,
+            res_id: this.props.res_id,
             updateControlPanel: this.updateControlPanel.bind(this),
             trigger: this.trigger_up.bind(this),
         });
@@ -28,8 +28,8 @@ export class SignOcaPdfAction extends Component {
     getState() {
         var result = this._super(...arguments);
         result = _.extend({}, result, {
-            res_model: this.model,
-            res_id: this.res_id,
+            res_model: this.props.model,
+            res_id: this.props.res_id,
         });
         return result;
     }

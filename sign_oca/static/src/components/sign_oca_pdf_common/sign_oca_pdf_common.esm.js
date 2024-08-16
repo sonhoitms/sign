@@ -1,12 +1,17 @@
 /** @odoo-module QWeb **/
 import {Component, onMounted, onWillStart, onWillUnmount, useRef} from "@odoo/owl";
-import {Dialog} from "@web/core/dialog/dialog";
+import { AlertDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 import {_t} from "@web/core/l10n/translation";
 import {renderToString} from "@web/core/utils/render";
+import { useService } from '@web/core/utils/hooks';
 
 export default class SignOcaPdfCommon extends Component {
+    static props = {
+        model: String,
+        res_id: Number,
+    }
     setup() {
-        super.setup(...arguments);
+        super.setup();
         this.field_template = "sign_oca.sign_iframe_field";
         console.log(this.props);
         this.pdf_url = this.getPdfUrl();
@@ -19,31 +24,36 @@ export default class SignOcaPdfCommon extends Component {
             iframeReject = reject;
         });
         this.items = {};
+        this.dialog = useService('dialog');
         onWillUnmount(() => {
             clearTimeout(this.reviewFieldsTimeout);
         });
         this.iframeLoaded.resolve = iframeResolve;
         this.iframeLoaded.reject = iframeReject;
-        onWillStart(this.willStart.bind(this));
+        onWillStart(this.willStart);
         onMounted(() => {
             this.waitIframeLoaded();
         });
     }
     getPdfUrl() {
-        return "/web/content/" + this.props.model + "/" + this.props.res_id + "/data";
+        return "/web/content/" + this.props.res_model + "/" + this.props.res_id + "/data";
     }
     async willStart() {
-        this.info = await this.env.services.rpc({
-            model: this.props.model,
-            method: "get_info",
-            args: [[this.props.res_id]],
-        });
+        this.info = await this.env.services.orm.call(
+            this.props.res_model,
+            "get_info",
+            [[this.props.res_id]],
+        );
     }
     waitIframeLoaded() {
         var error = this.iframe.el.contentDocument.getElementById("errorWrapper");
         if (error && window.getComputedStyle(error).display !== "none") {
             this.iframeLoaded.resolve();
-            return Dialog.alert(this, _t("Need a valid PDF to add signature fields !"));
+            this.dialog.add(AlertDialog, {
+                title: _t("Alert !"),
+                body: _t("Need a valid PDF to add signature fields !"),
+            });
+            return
         }
         var nbPages =
             this.iframe.el.contentDocument.getElementsByClassName("page").length;
@@ -58,7 +68,7 @@ export default class SignOcaPdfCommon extends Component {
             var self = this;
             setTimeout(function () {
                 self.waitIframeLoaded();
-            }, 50);
+            }, 1000);
         }
     }
     reviewFields() {
@@ -70,7 +80,7 @@ export default class SignOcaPdfCommon extends Component {
         }
         this.reviewFieldsTimeout = setTimeout(this.reviewFields.bind(this), 1000);
     }
-    postIframeFields() {
+    async postIframeFields() {
         this.iframe.el.contentDocument
             .getElementById("viewerContainer")
             .addEventListener(
@@ -84,17 +94,18 @@ export default class SignOcaPdfCommon extends Component {
         var iframeCss = document.createElement("link");
         iframeCss.setAttribute("rel", "stylesheet");
         iframeCss.setAttribute("href", "/sign_oca/get_assets.css");
-
-        var iframeJs = document.createElement("script");
-        iframeJs.setAttribute("type", "text/javascript");
-        iframeJs.setAttribute("src", "/sign_oca/get_assets.js");
         this.iframe.el.contentDocument
             .getElementsByTagName("head")[0]
             .append(iframeCss);
-        this.iframe.el.contentDocument.getElementsByTagName("head")[0].append(iframeJs);
-        _.each(this.info.items, (item) => {
-            this.postIframeField(item);
-        });
+        var iframeJs = document.createElement("script");
+        iframeJs.setAttribute("type", "text/javascript");
+        iframeJs.setAttribute("src", "/sign_oca/get_assets.js");
+
+        await this.iframe.el.contentDocument.getElementsByTagName("head")[0].append(iframeJs);
+        
+        for(const [id, item] of Object.entries(this.info.items)){
+            await this.postIframeField(item);
+        }
         $(this.iframe.el.contentDocument.getElementsByClassName("page")[0]).append(
             $("<div class='o_sign_oca_ready'/>")
         );

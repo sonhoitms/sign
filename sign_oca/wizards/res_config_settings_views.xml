@@ -8,9 +8,11 @@
         <field name="inherit_id" ref="base.res_config_settings_view_form" />
         <field name="arch" type="xml">
             <xpath expr="//form" position="inside">
+            
                 <app
                     data-string="Sign Oca"
                     string="Sign Oca"
+                    name="sign_oca"
                     groups="sign_oca.sign_oca_group_admin"
                 >
                     <block id="sign_oca_requests" title="Sign Requests">
@@ -19,7 +21,6 @@
                             help="Once all signers have signed the request, a copy of the final document will be sent to each of them."
                         >
                             <field name="sign_oca_send_sign_request_copy" />
-                            <label for="sign_oca_send_sign_request_copy" />
                         </setting>
                     </block>
                 </app>

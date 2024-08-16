@@ -3,7 +3,7 @@
     <t t-name="sign_oca.SignerMenuView">
         <div class="o_ActivityMenuView dropdown" t-ref="root">
             <a
-                class="o_ActivityMenuView_dropdownToggle dropdown-toggle o-no-caret o-dropdown--narrow"
+                class="o_ActivityMenuView_dropdownToggle dropdown-toggle o-no-caret"
                 t-att-aria-expanded="signerMenuView.isOpen ? 'true' : 'false'"
                 title="Sign Requests"
                 href="#"
@@ -43,7 +43,7 @@
                             t-att-data-domain="requestGroupView.requestGroup.domain"
                             data-filter='my'
                             t-att-data-activity-group-view-local-id="requestGroupView.localId"
-                            t-on-click="requestGroupView.onClickFilterButton"
+                            
                         >
                             <div
                                 t-if="requestGroupView.requestGroup.irModel.iconUrl"

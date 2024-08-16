@@ -4,14 +4,14 @@
         <button class="btn btn-primary"><i
                 class="fa fa-question-circle"
             /> Help</button>
-        <!--
+
         <div
             >In order to add a new field, do a right click over the PDF page. You will be able to select the field that you will import</div>
             <div
             >Then, you can move and resize the fields over the PDF page using the move icons.</div>
             <div
             >If you do a click over a field, you will be able to change the default configurations of the field</div>
-            <div>Data is saved automatically when editing</div>-->
+            <div>Data is saved automatically when editing</div>
     </t>
     <t t-name="sign_oca.SignOcaConfigureHelpDialog">
         <div>
@@ -49,7 +49,7 @@
             <div
                 class="o_sign_oca_button_header"
             >Click on the field that you want to add</div>
-            <t t-foreach="info.fields" t-as="field">
+            <t t-foreach="info.fields" t-as="field" t-key="field_index">
                 <div
                     class="o_sign_oca_context_menu_item"
                     t-att-data-field="field.id"
@@ -64,7 +64,7 @@
             <label for="field_id">Field</label>
             <div class="o_sign_oca_field_edition_value">
                 <select name="field_id">
-                    <t t-foreach="info.fields" t-as="field">
+                    <t t-foreach="info.fields" t-as="field" t-key="field_index">
                         <option
                             t-att-value="field.id"
                             t-out="field.name"
@@ -76,7 +76,7 @@
             <label for="role_id">Filled by</label>
             <div class="o_sign_oca_field_edition_value">
                 <select name="role_id">
-                    <t t-foreach="info.roles" t-as="role">
+                    <t t-foreach="info.roles" t-as="role" t-key="role_index">
                         <option
                             t-att-value="role.id"
                             t-out="role.name"
@@ -103,6 +103,7 @@
             </div>
         </div>
     </t>
+
     <t
         t-name="sign_oca.SignOcaConfigure"
         t-inherit="sign_oca.SignOcaPdfCommon"

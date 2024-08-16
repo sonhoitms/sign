@@ -10,8 +10,7 @@
                 <t t-call-assets="web.assets_frontend" t-js="false" />
                 <t t-call-assets="web.assets_frontend" t-css="false" />
                 <script type="text/javascript">
-                    odoo.define("sign.document_portal", function(require) {
-                        var ajax = require("web.ajax");
+                    odoo.define("sign.document_portal",["@sign_oca/components/sign_oca_pdf_portal/sign_oca_pdf_portal.esm"], function(require) {
                         var document_signing = require("@sign_oca/components/sign_oca_pdf_portal/sign_oca_pdf_portal.esm");
                         document_signing.initDocumentToSign(<t
                         t-out="json.dumps({'access_token': access_token, 'signer_id': signer.id})"

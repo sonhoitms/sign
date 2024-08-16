@@ -1,28 +1,32 @@
 /** @odoo-module QWeb **/
 
-import {Component} from "@odoo/owl";
 import {ControlPanel} from "@web/search/control_panel/control_panel";
-import {Dialog} from "@web/core/dialog/dialog";
-import {FormRenderer} from "@web/views/form/form_renderer";
+import {SignOcaDialog} from "../../js/dialog.js";
 import SignOcaPdfCommon from "../sign_oca_pdf_common/sign_oca_pdf_common.esm.js";
 import {_t} from "@web/core/l10n/translation";
 import {registry} from "@web/core/registry";
 import {renderToString} from "@web/core/utils/render";
+import {useService} from "@web/core/utils/hooks";
+import { useState } from "@odoo/owl";
 
 export class SignOcaConfigureControlPanel extends ControlPanel {}
 SignOcaConfigureControlPanel.template = "sign_oca.SignOcaConfigureControlPanel";
 export class SignOcaConfigure extends SignOcaPdfCommon {
+    static props = ["*"];
+    static template = "sign_oca.SignOcaConfigure";
     setup() {
         super.setup(...arguments);
         this.field_template = "sign_oca.sign_iframe_field_configure";
         this.contextMenu = undefined;
-        this.isMobile = this.env.device.isMobile || this.env.device.isMobileDevice;
+        this.isMobile = this.env.isMobile || this.env.isMobileDevice;
+        this.dialog = useService('dialog');
+        this.orm = useService('orm');
     }
     postIframeFields() {
         super.postIframeFields(...arguments);
-        _.each(
-            this.iframe.el.contentDocument.getElementsByClassName("page"),
-            (page) => {
+        var entries_pages = this.iframe.el.contentDocument.getElementsByClassName("page");
+        if (entries_pages) {
+            for(const [index, page] of Object.entries(entries_pages)){
                 page.addEventListener("mousedown", (e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -49,40 +53,29 @@ export class SignOcaConfigure extends SignOcaPdfCommon {
                     page.append(this.contextMenu[0]);
                 });
             }
-        );
+        };
         this.iframe.el.contentDocument.addEventListener(
             "click",
             (ev) => {
                 if (this.contextMenu && !this.creatingItem) {
                     if (this.contextMenu[0].contains(ev.target)) {
                         this.creatingItem = true;
-                        this.env.services
-                            .rpc({
-                                model: this.props.model,
-                                method: "add_item",
-                                args: [
-                                    [this.props.res_id],
-                                    {
-                                        field_id: parseInt(ev.target.dataset.field, 10),
-                                        page: parseInt(ev.target.dataset.page, 10),
-                                        position_x: parseFloat(
-                                            ev.target.parentElement.style.left
-                                        ),
-                                        position_y: parseFloat(
-                                            ev.target.parentElement.style.top
-                                        ),
-                                        width: 20,
-                                        height: 1.5,
-                                    },
-                                ],
-                            })
-                            .then((data) => {
-                                this.info.items[data.id] = data;
-                                this.postIframeField(data);
-                                this.contextMenu.remove();
-                                this.contextMenu = undefined;
-                                this.creatingItem = false;
-                            });
+                        this.orm.call(this.props.res_model, "add_item", [
+                            [this.props.res_id],{
+                                field_id: parseInt(ev.target.dataset.field, 10),
+                                page: parseInt(ev.target.dataset.page, 10),
+                                position_x: parseFloat(ev.target.parentElement.style.left),
+                                position_y: parseFloat(ev.target.parentElement.style.top),
+                                width: 20,
+                                height: 1.5,
+                            }
+                        ]).then((data) => {
+                            this.info.items[data.id] = data;
+                            this.postIframeField(data);
+                            this.contextMenu.remove();
+                            this.contextMenu = undefined;
+                            this.creatingItem = false;
+                        })
                     } else {
                         this.contextMenu.remove();
                         this.contextMenu = undefined;
@@ -110,87 +103,13 @@ export class SignOcaConfigure extends SignOcaPdfCommon {
                 }
                 var target = e.currentTarget;
                 // TODO: Open Dialog for configuration
-                var dialog = new Dialog(this, {
-                    title: _t("Edit field"),
-                    $content: $(
-                        renderToString("sign_oca.sign_oca_field_edition", {
-                            item,
-                            info: this.info,
-                        })
-                    ),
-
-                    buttons: [
-                        {
-                            text: _t("Save"),
-                            classes: "btn-primary",
-                            close: true,
-                            click: () => {
-                                var field_id = parseInt(
-                                    dialog.$el.find('select[name="field_id"]').val(),
-                                    10
-                                );
-                                var role_id = parseInt(
-                                    dialog.$el.find('select[name="role_id"]').val(),
-                                    10
-                                );
-                                var required = dialog.$el
-                                    .find("input[name='required']")
-                                    .prop("checked");
-                                var placeholder = dialog.$el
-                                    .find("input[name='placeholder']")
-                                    .val();
-                                this.env.services
-                                    .rpc({
-                                        model: this.props.model,
-                                        method: "set_item_data",
-                                        args: [
-                                            [this.props.res_id],
-                                            item.id,
-                                            {
-                                                field_id,
-                                                role_id,
-                                                required,
-                                                placeholder,
-                                            },
-                                        ],
-                                    })
-                                    .then(() => {
-                                        item.field_id = field_id;
-                                        item.name = _.filter(
-                                            this.info.fields,
-                                            (field) => field.id === field_id
-                                        )[0].name;
-                                        item.role_id = role_id;
-                                        item.required = required;
-                                        item.placeholder = placeholder;
-                                        target.remove();
-                                        this.postIframeField(item);
-                                    });
-                            },
-                        },
-                        {
-                            text: _t("Delete"),
-                            classes: "btn-danger",
-                            close: true,
-                            click: () => {
-                                this.env.services
-                                    .rpc({
-                                        model: this.props.model,
-                                        method: "delete_item",
-                                        args: [[this.props.res_id], item.id],
-                                    })
-                                    .then(() => {
-                                        delete this.info.items[item.id];
-                                        target.remove();
-                                    });
-                            },
-                        },
-                        {
-                            text: _t("Cancel"),
-                            close: true,
-                        },
-                    ],
-                }).open();
+                this.dialog.add(SignOcaDialog, {
+                    item: item,
+                    info: this.info,
+                    model: this.props.res_model,
+                    res_id: this.props.res_id,
+                    SignOcaConfigure: this,
+                    });
             },
             true
         );
@@ -239,24 +158,14 @@ export class SignOcaConfigure extends SignOcaPdfCommon {
                     target.css("top", top + "%");
                     item.position_x = left;
                     item.position_y = top;
-                    this.env.services.rpc({
-                        model: this.props.model,
-                        method: "set_item_data",
-                        args: [
-                            [this.props.res_id],
-                            item.id,
-                            {
-                                position_x: left,
-                                position_y: top,
-                            },
-                        ],
-                    });
+                    this.orm.call(this.props.res_model, "set_item_data", [[this.props.res_id], item.id, { position_x: left, position_y: top }]);
                     this.movingItem = undefined;
                 },
                 {once: true}
             );
         });
-        _.each(resizeItems, (resizeItem) => {
+        
+        for(const [index, resizeItem] of Object.entries(resizeItems)){
             resizeItem.addEventListener(startFunction, (mousedownEvent) => {
                 mousedownEvent.preventDefault();
                 var parentPage = mousedownEvent.target.parentElement.parentElement;
@@ -304,10 +213,7 @@ export class SignOcaConfigure extends SignOcaPdfCommon {
                         target.css("height", height + "%");
                         item.width = width;
                         item.height = height;
-                        this.env.services.rpc({
-                            model: this.props.model,
-                            method: "set_item_data",
-                            args: [
+                        this.orm.call(this.props.res_model, "set_item_data", [
                                 [this.props.res_id],
                                 item.id,
                                 {
@@ -315,12 +221,12 @@ export class SignOcaConfigure extends SignOcaPdfCommon {
                                     height: height,
                                 },
                             ],
-                        });
+                        );
                     },
                     {once: true}
                 );
             });
-        });
+        };
         return signatureItem;
     }
     _onResizeItem(e) {
@@ -369,33 +275,25 @@ export class SignOcaConfigure extends SignOcaPdfCommon {
     }
 }
 
-export class SignOcaConfigureAction extends Component {
-    init(parent, action) {
-        this._super.apply(this, arguments);
-        this.model =
-            (action.params.res_model !== undefined && action.params.res_model) ||
-            action.context.params.res_model;
-        this.res_id =
-            (action.params.res_id !== undefined && action.params.res_id) ||
-            action.context.params.id;
-    }
-    async start() {
-        await this._super(...arguments);
-        this.component = new FormRenderer(this, SignOcaConfigure, {
-            model: this.model,
-            res_id: this.res_id,
-        });
-        this.$el.addClass("o_sign_oca_action");
-        return this.component.mount(this.$(".o_content")[0]);
-    }
-    getState() {
-        var result = this._super(...arguments);
-        result = _.extend({}, result, {
-            res_model: this.model,
-            res_id: this.res_id,
-        });
-        return result;
+export class SignOcaConfigureAction extends SignOcaConfigure {
+    static props = ["*"];
+
+    setup() {
+        var action = this.props.action;
+        var res_model = action.params.res_model ||
+            (action.context.params && action.context.params.active_model) ||
+            'sign.oca.template';
+
+        var res_id = action.params.res_id !== undefined ?
+            action.params.res_id :
+            action.context.active_id || undefined;
+
+        this.props.res_model = res_model;
+        this.props.res_id = res_id;
+
+        super.setup();
+
     }
 }
-SignOcaConfigure.template = "sign_oca.SignOcaConfigure";
+
 registry.category("actions").add("sign_oca_configure", SignOcaConfigureAction);
