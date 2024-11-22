@@ -2,7 +2,7 @@
     following data:
 
 - Partner type: Expression
-- Expression: \${object.owner_user_id.partner_id.id}
+- Expression: \{{object.owner_user_id.partner_id.id}}
 
 1.  Go to Sign \> Templates and create a template with the following
     data:
