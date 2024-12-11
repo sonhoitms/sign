@@ -38,6 +38,11 @@ msgid "Maintenance Equipment"
 msgstr "Attrezzatura manutenzione"
 
 #. module: maintenance_sign_oca
+#: model_terms:ir.ui.view,arch_db:maintenance_sign_oca.res_config_settings_view_form
+msgid "Sign Oca"
+msgstr ""
+
+#. module: maintenance_sign_oca
 #: model:ir.model.fields,field_description:maintenance_sign_oca.field_res_company__maintenance_equipment_sign_oca_template_id
 #: model:ir.model.fields,field_description:maintenance_sign_oca.field_res_config_settings__maintenance_equipment_sign_oca_template_id
 msgid "Sign Oca Template"
@@ -58,7 +63,5 @@ msgstr "Firma richieste"
 msgid "Sign request count"
 msgstr "Conteggio firme richieste"
 
-#. module: maintenance_sign_oca
-#: model_terms:ir.ui.view,arch_db:maintenance_sign_oca.res_config_settings_view_form
-msgid "Template"
-msgstr "Modello"
+#~ msgid "Template"
+#~ msgstr "Modello"
