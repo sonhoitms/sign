@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2024-10-10 13:06+0000\n"
+"PO-Revision-Date: 2024-12-12 10:06+0000\n"
 "Last-Translator: mymage <stefano.consolaro@mymage.it>\n"
 "Language-Team: none\n"
 "Language: it\n"
@@ -40,7 +40,7 @@ msgstr "Attrezzatura manutenzione"
 #. module: maintenance_sign_oca
 #: model_terms:ir.ui.view,arch_db:maintenance_sign_oca.res_config_settings_view_form
 msgid "Sign Oca"
-msgstr ""
+msgstr "Firma OCA"
 
 #. module: maintenance_sign_oca
 #: model:ir.model.fields,field_description:maintenance_sign_oca.field_res_company__maintenance_equipment_sign_oca_template_id
